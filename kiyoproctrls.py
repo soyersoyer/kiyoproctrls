@@ -36,8 +36,8 @@ class uvc_xu_control_query(ctypes.Structure):
     _fields_ = [
         ('unit', ctypes.c_uint8),
         ('selector', ctypes.c_uint8),
-        ('query', ctypes.c_uint8),		# Video Class-Specific Request Code,
-                                        # defined in linux/usb/video.h A.8. 
+        ('query', ctypes.c_uint8),      # Video Class-Specific Request Code,
+                                        # defined in linux/usb/video.h A.8.
         ('size', ctypes.c_uint16),
         ('data', ctypes.c_void_p),
     ]
@@ -55,37 +55,36 @@ UVC_GET_LEN      = 0x85
 UVC_GET_INFO     = 0x86
 UVC_GET_DEF      = 0x87
 
-
-UVCX_VIDEO_CONFIG_PROBE		 = 0x01
-UVCX_VIDEO_CONFIG_COMMIT	 = 0x02
+EU1_SET_ISP = 0x01
+EU1_GET_ISP_RESULT = 0x02
 
 # UVC EU1 extension GUID 23e49ed0-1178-4f31-ae52-d2fb8a8d3b48
 UVC_EU1_GUID = b'\xd0\x9e\xe4\x23\x78\x11\x31\x4f\xae\x52\xd2\xfb\x8a\x8d\x3b\x48'
 
 # Razer Kiyo Pro specific registers and values
 
-UVC_KIYO_PRO_AF_RESPONSIVE = b'\xff\x06\x00\x00\x00\x00\x00\x00'
-UVC_KIYO_PRO_AF_PASSIVE =    b'\xff\x06\x01\x00\x00\x00\x00\x00'
+AF_RESPONSIVE = b'\xff\x06\x00\x00\x00\x00\x00\x00'
+AF_PASSIVE =    b'\xff\x06\x01\x00\x00\x00\x00\x00'
 
-UVC_KIYO_PRO_HDR_OFF =       b'\xff\x02\x00\x00\x00\x00\x00\x00'
-UVC_KIYO_PRO_HDR_ON =        b'\xff\x02\x01\x00\x00\x00\x00\x00'
+HDR_OFF =       b'\xff\x02\x00\x00\x00\x00\x00\x00'
+HDR_ON =        b'\xff\x02\x01\x00\x00\x00\x00\x00'
 
-UVC_KIYO_PRO_HDR_DARK =      b'\xff\x07\x00\x00\x00\x00\x00\x00'
-UVC_KIYO_PRO_HDR_BRIGHT =    b'\xff\x07\x01\x00\x00\x00\x00\x00'
+HDR_DARK =      b'\xff\x07\x00\x00\x00\x00\x00\x00'
+HDR_BRIGHT =    b'\xff\x07\x01\x00\x00\x00\x00\x00'
 
-UVC_KIYO_PRO_FOV_WIDE =       b'\xff\x01\x00\x03\x00\x00\x00\x00'
-UVC_KIYO_PRO_FOV_MEDIUM_PRE = b'\xff\x01\x00\x03\x01\x00\x00\x00'
-UVC_KIYO_PRO_FOV_MEDIUM =     b'\xff\x01\x01\x03\x01\x00\x00\x00'
-UVC_KIYO_PRO_FOV_NARROW_PRE = b'\xff\x01\x00\x03\x02\x00\x00\x00'
-UVC_KIYO_PRO_FOV_NARROW =     b'\xff\x01\x01\x03\x02\x00\x00\x00'
+FOV_WIDE =       b'\xff\x01\x00\x03\x00\x00\x00\x00'
+FOV_MEDIUM_PRE = b'\xff\x01\x00\x03\x01\x00\x00\x00'
+FOV_MEDIUM =     b'\xff\x01\x01\x03\x01\x00\x00\x00'
+FOV_NARROW_PRE = b'\xff\x01\x00\x03\x02\x00\x00\x00'
+FOV_NARROW =     b'\xff\x01\x01\x03\x02\x00\x00\x00'
 
 # Unknown yet, the synapse sends it in start
-UVC_KIYO_PRO_UNKNOWN =       b'\xff\x04\x00\x00\x00\x00\x00\x00'
+UNKNOWN =       b'\xff\x04\x00\x00\x00\x00\x00\x00'
 
 # save previous values to the camera
-UVC_KIYO_PRO_SAVE =          b'\xc0\x03\xa8\x00\x00\x00\x00\x00'
+SAVE =          b'\xc0\x03\xa8\x00\x00\x00\x00\x00'
 
-UVC_KIYO_PRO_LOAD =          b'\x00\x00\x00\x00\x00\x00\x00\x00'
+LOAD =          b'\x00\x00\x00\x00\x00\x00\x00\x00'
 
 def to_buf(b):
     return ctypes.create_string_buffer(b)
@@ -152,24 +151,23 @@ def find_usb_ids_in_sysfs(device):
     if not os.path.isfile(vendorfile) or not os.path.isfile(productfile):
         return ''
 
-    vendor = ''
-    try:
-        with open(vendorfile, 'r') as f:
-            vendor = f.read().strip()
-    except Exception as e:
-        logging.warning(f'Failed to read usb vendor id from {vendorfile}: {e}')
-
-    product = ''
-    try:
-        with open(productfile, 'r') as f:
-            product = f.read().strip()
-    except Exception as e:
-        logging.warning(f'Failed to read usb product id from {productfile}: {e}')
+    vendor = read_usb_id_from_file(vendorfile)
+    product = read_usb_id_from_file(productfile)
 
     return vendor + ':' + product
 
+def read_usb_id_from_file(file):
+    id = ''
+    try:
+        with open(file, 'r') as f:
+            id = f.read().strip()
+    except Exception as e:
+        logging.warning(f'Failed to read usb id from {file}: {e}')
+    return id
 
-class UVCXKiyoProCtrls:
+
+
+class KiyoProCtrls:
     def __init__(self, device, fd):
         self.device = device
         self.fd = fd
@@ -186,44 +184,44 @@ class UVCXKiyoProCtrls:
             return
 
         # getting the values doesn't work in this way, maybe later in newer firmwares
-        #current = uvcx.to_buf(uvcx.UVC_KIYO_PRO_LOAD)
-        #uvcx.query_xu_control(self.fd, self.unit_id, uvcx.UVCX_VIDEO_CONFIG_COMMIT, uvcx.UVC_GET_CUR, current)
+        #current = to_buf(LOAD)
+        #query_xu_control(self.fd, self.unit_id, EU1_GET_ISP_RESULT, UVC_GET_CUR, current)
         #print('current:', list(current))
 
         self.ctrls = [
-            KIYOCtrl(
+            Ctrl(
                 'af_mode',
                 {
-                    UVC_KIYO_PRO_AF_PASSIVE: 'passive',
-                    UVC_KIYO_PRO_AF_RESPONSIVE: 'responsive',
+                    AF_PASSIVE: 'passive',
+                    AF_RESPONSIVE: 'responsive',
                 }
             ),
-            KIYOCtrl(
+            Ctrl(
                 'hdr',
                 {
-                    UVC_KIYO_PRO_HDR_OFF: 'off',
-                    UVC_KIYO_PRO_HDR_ON: 'on',
+                    HDR_OFF: 'off',
+                    HDR_ON: 'on',
                 }
             ),
-            KIYOCtrl(
+            Ctrl(
                 'hdr_mode',
                 {
-                    UVC_KIYO_PRO_HDR_BRIGHT: 'bright',
-                    UVC_KIYO_PRO_HDR_DARK: 'dark',
+                    HDR_BRIGHT: 'bright',
+                    HDR_DARK: 'dark',
                 }
             ),
-            KIYOCtrl(
+            Ctrl(
                 'fov',
                 {
-                    UVC_KIYO_PRO_FOV_WIDE: 'wide',
-                    UVC_KIYO_PRO_FOV_MEDIUM: 'medium',
-                    UVC_KIYO_PRO_FOV_NARROW: 'narrow',
+                    FOV_WIDE: 'wide',
+                    FOV_MEDIUM: 'medium',
+                    FOV_NARROW: 'narrow',
                 }
             ),
         ]
         self.befores = {
-            UVC_KIYO_PRO_FOV_MEDIUM: UVC_KIYO_PRO_FOV_MEDIUM_PRE,
-            UVC_KIYO_PRO_FOV_NARROW: UVC_KIYO_PRO_FOV_NARROW_PRE,
+            FOV_MEDIUM: FOV_MEDIUM_PRE,
+            FOV_NARROW: FOV_NARROW_PRE,
         }
     
     def print_ctrls(self):
@@ -235,24 +233,27 @@ class UVCXKiyoProCtrls:
         for k, v in params.items():
             ctrl = find_by_name(self.ctrls, k)
             if ctrl == None:
-                logging.warning(f'UVCXKiyoProCtrls: can\'t find {k} control in {[c.name for c in self.ctrls]}')
+                logging.warning(f'KiyoProCtrls: can\'t find {k} control in {[c.name for c in self.ctrls]}')
                 continue
             menukey = find_by_value(ctrl.menu, v)
             if menukey == None:
-                logging.warning(f'UVCXKiyoProCtrls: can\'t find {v} in {[v for v in ctrl.menu.values()]}')
+                logging.warning(f'KiyoProCtrls: can\'t find {v} in {list(ctrl.menu.values())}')
                 continue
             ctrl.value = menukey
 
             before = self.befores.get(ctrl.value)
             if before:
-                query_xu_control(self.fd, self.unit_id, UVCX_VIDEO_CONFIG_PROBE, UVC_SET_CUR, to_buf(before))
-            
-            query_xu_control(self.fd, self.unit_id, UVCX_VIDEO_CONFIG_PROBE, UVC_SET_CUR, to_buf(ctrl.value))
+                query_xu_control(self.fd, self.unit_id, EU1_SET_ISP, UVC_SET_CUR, to_buf(before))
 
-        query_xu_control(self.fd, self.unit_id, UVCX_VIDEO_CONFIG_PROBE, UVC_SET_CUR, to_buf(UVC_KIYO_PRO_SAVE))
+            query_xu_control(self.fd, self.unit_id, EU1_SET_ISP, UVC_SET_CUR, to_buf(ctrl.value))
 
+        query_xu_control(self.fd, self.unit_id, EU1_SET_ISP, UVC_SET_CUR, to_buf(SAVE))
 
-
+class Ctrl:
+    def __init__(self, name, menu = None):
+        self.name = name
+        self.value = None
+        self.menu = menu
 
 def find_by_name(ctrls, name):
     for c in ctrls:
@@ -266,11 +267,6 @@ def find_by_value(menu, value):
             return k
     return None
 
-class KIYOCtrl:
-    def __init__(self, name, menu = None):
-        self.name = name
-        self.value = None
-        self.menu = menu
 
 
 def usage():
@@ -317,7 +313,7 @@ except Exception as e:
     logging.error(f'os.open({device}, os.O_RDWR, 0) failed: {e}')
     sys.exit(2)
 
-kiyo_pro = UVCXKiyoProCtrls(device, fd)
+kiyo_pro = KiyoProCtrls(device, fd)
 if not kiyo_pro.supported():
     logging.error(f'{device} is not a Kiyo Pro')
     sys.exit(3)
