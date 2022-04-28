@@ -21,7 +21,8 @@ example:
 ```
 
 
-## GUI
+# kiyoproctrlsgui
+GUI for the Razer Kiyo Pro controls
 
 ![kiyoproctrls screen](https://github.com/soyersoyer/kiyoproctrls/raw/main/gui_screen.png)
 
