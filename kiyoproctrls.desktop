@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=kiyoproctrls
+Comment=Razer Kiyo Pro controls for Linux
+Exec=python3 $PWD/kiyoproctrlsgui.py
+Path=$PWD
+Icon=$PWD/kiyopro_240.png
+Terminal=false
+Categories=Settings;
