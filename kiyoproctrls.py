@@ -280,54 +280,57 @@ def usage():
     print(f'example:')
     print(f'  python3 {sys.argv[0]} -c hdr=on,hdr_mode=dark,af_mode=passive,fov=wide')
 
+def main():
+    try:
+        arguments, values = getopt.getopt(sys.argv[1:], 'hd:lc:', ['help', 'list'])
+    except getopt.error as err:
+        print(err)
+        usage()
+        sys.exit(2)
 
-try:
-    arguments, values = getopt.getopt(sys.argv[1:], 'hd:lc:', ['help', 'list'])
-except getopt.error as err:
-    print(err)
-    usage()
-    sys.exit(2)
-
-if len(arguments) == 0:
-    usage()
-    sys.exit(0)
-
-list_controls = False
-device = '/dev/video0'
-controls = ''
-
-for current_argument, current_value in arguments:
-    if current_argument in ('-h', '--help'):
+    if len(arguments) == 0:
         usage()
         sys.exit(0)
-    elif current_argument in ('-d', '--device'):
-        device = current_value
-    elif current_argument in ("-l", "--list"):
-        list_controls = True
-    elif current_argument in ('-c'):
-        controls = current_value
 
-try:
-    fd = os.open(device, os.O_RDWR, 0)
-except Exception as e:
-    logging.error(f'os.open({device}, os.O_RDWR, 0) failed: {e}')
-    sys.exit(2)
+    list_controls = False
+    device = '/dev/video0'
+    controls = ''
 
-kiyo_pro = KiyoProCtrls(device, fd)
-if not kiyo_pro.supported():
-    logging.error(f'{device} is not a Kiyo Pro')
-    sys.exit(3)
+    for current_argument, current_value in arguments:
+        if current_argument in ('-h', '--help'):
+            usage()
+            sys.exit(0)
+        elif current_argument in ('-d', '--device'):
+            device = current_value
+        elif current_argument in ('-l', '--list'):
+            list_controls = True
+        elif current_argument in ('-c'):
+            controls = current_value
 
-if list_controls:
-    kiyo_pro.print_ctrls()
+    try:
+        fd = os.open(device, os.O_RDWR, 0)
+    except Exception as e:
+        logging.error(f'os.open({device}, os.O_RDWR, 0) failed: {e}')
+        sys.exit(2)
 
-if controls != '':
-    ctrlsmap = {}
-    for control in controls.split(','):
-        kv = control.split('=', maxsplit=1)
-        if len(kv) != 2:
-            logging.warning(f'invalid value: {control}')
-            continue
-        ctrlsmap[kv[0]]=kv[1]
+    kiyo_pro = KiyoProCtrls(device, fd)
+    if not kiyo_pro.supported():
+        logging.error(f'{device} is not a Kiyo Pro')
+        sys.exit(3)
 
-    kiyo_pro.setup_ctrls(ctrlsmap)
+    if list_controls:
+        kiyo_pro.print_ctrls()
+
+    if controls != '':
+        ctrlsmap = {}
+        for control in controls.split(','):
+            kv = control.split('=', maxsplit=1)
+            if len(kv) != 2:
+                logging.warning(f'invalid value: {control}')
+                continue
+            ctrlsmap[kv[0]]=kv[1]
+
+        kiyo_pro.setup_ctrls(ctrlsmap)
+
+if __name__ == '__main__':
+    main()
