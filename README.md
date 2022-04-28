@@ -24,6 +24,8 @@ example:
 # kiyoproctrlsgui
 GUI for the Razer Kiyo Pro controls
 
+![kiyoproctrls launcher](https://github.com/soyersoyer/kiyoproctrls/raw/main/gui_launcher.png)
+
 ![kiyoproctrls screen](https://github.com/soyersoyer/kiyoproctrls/raw/main/gui_screen.png)
 
 ### GUI install
