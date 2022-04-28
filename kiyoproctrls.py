@@ -273,7 +273,7 @@ def find_by_value(menu, value):
 
 
 def usage():
-    print(f'usage: python3 {sys.argv[0]} [--help] [-d DEVICE] [--list] [-c CONTROLS]\n')
+    print(f'usage: {sys.argv[0]} [--help] [-d DEVICE] [--list] [-c CONTROLS]\n')
     print(f'optional arguments:')
     print(f'  -h, --help    show this help message and exit')
     print(f'  -d DEVICE     use DEVICE, default /dev/video0')
@@ -281,7 +281,7 @@ def usage():
     print(f'  -c CONTROLS   set CONTROLS (eg.: hdr=on,fov=wide)')
     print()
     print(f'example:')
-    print(f'  python3 {sys.argv[0]} -c hdr=on,hdr_mode=dark,af_mode=passive,fov=wide')
+    print(f'  {sys.argv[0]} -c hdr=on,hdr_mode=dark,af_mode=passive,fov=wide')
 
 def main():
     try:
