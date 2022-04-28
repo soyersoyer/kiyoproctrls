@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import ctypes, logging, os.path, getopt, sys
 from fcntl import ioctl
 
