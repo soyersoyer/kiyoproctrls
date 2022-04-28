@@ -170,6 +170,7 @@ def read_usb_id_from_file(file):
 
 
 class KiyoProCtrls:
+    KIYO_PRO_USB_ID = '1532:0e05'
     def __init__(self, device, fd):
         self.device = device
         self.fd = fd
@@ -178,7 +179,7 @@ class KiyoProCtrls:
         self.get_device_controls()
 
     def supported(self):
-        return self.unit_id != 0 and self.usb_ids == '1532:0e05'
+        return self.unit_id != 0 and self.usb_ids == KiyoProCtrls.KIYO_PRO_USB_ID
 
     def get_device_controls(self):
         if not self.supported():
