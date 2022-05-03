@@ -27,12 +27,29 @@ def _IOC(dir_, type_, nr, size):
 def _IOC_TYPECHECK(t):
     return ctypes.sizeof(t)
 
+def _IOR(type_, nr, size):
+    return _IOC(_IOC_READ, type_, nr, _IOC_TYPECHECK(size))
+
 def _IOWR(type_, nr, size):
     return _IOC(_IOC_READ | _IOC_WRITE, type_, nr, _IOC_TYPECHECK(size))
 
 #
 # ioctl structs, codes for UVC extensions
 #
+
+class v4l2_capability(ctypes.Structure):
+    _fields_ = [
+        ('driver', ctypes.c_char * 16),
+        ('card', ctypes.c_char * 32),
+        ('bus_info', ctypes.c_char * 32),
+        ('version', ctypes.c_uint32),
+        ('capabilities', ctypes.c_uint32),
+        ('device_caps', ctypes.c_uint32),
+        ('reserved', ctypes.c_uint32 * 3),
+    ]
+
+V4L2_CAP_VIDEO_CAPTURE = 0x00000001
+
 
 class uvc_xu_control_query(ctypes.Structure):
     _fields_ = [
@@ -44,6 +61,7 @@ class uvc_xu_control_query(ctypes.Structure):
         ('data', ctypes.c_void_p),
     ]
 
+VIDIOC_QUERYCAP = _IOR('V', 0, v4l2_capability)
 UVCIOC_CTRL_QUERY = _IOWR('u', 0x21, uvc_xu_control_query)
 
 # A.8. Video Class-Specific Request Codes
@@ -167,7 +185,17 @@ def read_usb_id_from_file(file):
         logging.warning(f'Failed to read usb id from {file}: {e}')
     return id
 
+def get_device_capabilities(device):
+    cap = v4l2_capability()
+    try:
+        fd = os.open(device, os.O_RDWR, 0)
+        ioctl(fd, VIDIOC_QUERYCAP, cap)
+        os.close(fd)
+    except Exception as e:
+        logging.error(f'get_device_capabilities({device}) failed: {e}')
 
+    return cap.device_caps
+    
 
 class KiyoProCtrls:
     KIYO_PRO_USB_ID = '1532:0e05'

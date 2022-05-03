@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os, logging, sys, webbrowser
-from kiyoproctrls import KiyoProCtrls, find_usb_ids_in_sysfs
+from kiyoproctrls import KiyoProCtrls, find_usb_ids_in_sysfs, get_device_capabilities, V4L2_CAP_VIDEO_CAPTURE
 
 try:
     from tkinter import Tk, ttk, PhotoImage
@@ -19,6 +19,7 @@ def get_kiyo_pro_devices(dir):
     devices = os.listdir(dir)
     devices.sort()
     devices = list(filter(lambda device: find_usb_ids_in_sysfs(dir + device) == KiyoProCtrls.KIYO_PRO_USB_ID, devices))
+    devices = list(filter(lambda device: get_device_capabilities(dir + device) & V4L2_CAP_VIDEO_CAPTURE, devices))
     return devices
 
 class KiyoProCtrlsGui:
