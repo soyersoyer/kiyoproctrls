@@ -1,3 +1,4 @@
+### The project has been merged into the [cameractrls](https://github.com/soyersoyer/cameractrls) project.
 # kiyoproctrls
 Razer Kiyo Pro controls for Linux
 
